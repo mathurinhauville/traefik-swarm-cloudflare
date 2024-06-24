@@ -1,0 +1,61 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--configFile=./config.yml"
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - proxy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/acme.json:/acme.json:rw
+      - ./data/config.yml:/config.yml:ro
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cf_api_token
+    secrets:
+      - cf_api_token
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.traefik.entrypoints=http
+        # edit
+        - traefik.http.routers.traefik.rule=Host(`traefik.my-app1.com`)
+
+        # edit
+        - traefik.http.middlewares.traefik-auth.basicauth.users=admin:hashpassword
+        - traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https
+        - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
+
+        - traefik.http.routers.traefik.middlewares=traefik-https-redirect
+        - traefik.http.routers.traefik-secure.entrypoints=https
+        # edit
+        - traefik.http.routers.traefik-secure.rule=Host(`traefik.my-app1.com`)
+        - traefik.http.routers.traefik-secure.middlewares=traefik-auth
+        - traefik.http.routers.traefik-secure.tls=true
+        - traefik.http.routers.traefik-secure.tls.certresolver=cloudflare
+        
+        # edit
+        - traefik.http.routers.traefik-secure.tls.domains[0].main=my-app1.com
+        - traefik.http.routers.traefik-secure.tls.domains[0].sans=*.my-app1.com
+        - traefik.http.routers.traefik-secure.tls.domains[1].main=my-app2.com
+        - traefik.http.routers.traefik-secure.tls.domains[1].sans=*.my-app2.com
+
+        - traefik.http.routers.traefik-secure.service=api@internal
+
+        - traefik.http.services.traefik.loadbalancer.server.port=888 # required by swarm but not used.
+
+secrets:
+  cf_api_token:
+    file: ./cf_api_token.txt
+
+networks:
+  proxy:
+    external: true
