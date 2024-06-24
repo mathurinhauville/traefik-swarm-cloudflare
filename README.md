@@ -24,5 +24,5 @@ docker stack deploy -c traefik.yml traefik -d
 
 ```bash
 cd my-service
-docker stack deploy -c my-service.yml my-service -d --with-registry-auth
+docker stack deploy -c myservice.yml myservice -d --with-registry-auth
 ```
