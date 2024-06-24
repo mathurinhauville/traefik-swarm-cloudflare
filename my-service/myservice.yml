@@ -1,5 +1,5 @@
 services:
-  frontend:
+  myservice:
     image: ghcr.io/user/image:main
     ports:
       - 3000:3000
@@ -10,10 +10,10 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.frontend.rule=Host(`my-app2.com`)"
-        - "traefik.http.routers.frontend.entrypoints=https"
-        - "traefik.http.routers.frontend.tls=true"
-        - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+        - "traefik.http.routers.myservice.rule=Host(`my-app2.com`)"
+        - "traefik.http.routers.myservice.entrypoints=https"
+        - "traefik.http.routers.myservice.tls=true"
+        - "traefik.http.services.myservice.loadbalancer.server.port=3000"
 
 networks:
   proxy:
